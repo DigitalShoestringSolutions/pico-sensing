@@ -16,7 +16,7 @@ from core.logging import log
 
 # startup
 log("starting up")
-if wifi_ssid is not None:           # Skip unless wifi_ssid has been overwritten in user_settings
+if wifi_ssid is not None:           # Skip unless wifi_ssid has been overwritten in user_settings.py
     wifi.connect(wifi_ssid, wifi_password, wifi_error_count_limit) # blocking until sucessful. wifi_password must be defined in user_settings.py
 led = machine.Pin("LED", machine.Pin.OUT)
 
@@ -27,7 +27,7 @@ consecutive_error_count = 0
 while True:
 
     try:
-        cycle()                     # cycle() is imported from settings
+        cycle()                     # cycle() is imported from user_settings.py
         consecutive_error_count = 0 # reset count if good cycle
 
     except Exception as err:

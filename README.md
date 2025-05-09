@@ -17,8 +17,9 @@ Minimal sensing system using the Raspberry Pi Pico
 # About
 
 ### `user_settings.py`
-Everything that needs to be done to configure this code is done in one file: `user_settings.py`.  
-This is combined with some default settings found in `core.settings.py` (overwriting where necessary) and the combined namespace is used by other components.
+Everything that needs to be done to configure this code is done in one file: `user_settings.py`. An underlying set of default settings can be found in `core.default_settings.py`.  
+Typically when a module loads the settings, it will first import * (all objects) from `default_settings`, then also import * from `user_settings`.  
+This allows for a merged namespace while keeping `user_settings` short.  
 
 ### Timing, `cycle()` and `cycle_interval`
 The only assumption imposed by using this repository is that the pico is to undertake a repetitive task at fixed intervals.  
