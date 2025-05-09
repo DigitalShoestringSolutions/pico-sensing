@@ -9,7 +9,8 @@ import machine          # Onboard LED
 from time import sleep
 
 # local imports
-from core.settings import * # default settings and user settings combined
+from core.default_settings import *
+from user_settings import *     # Overwrite default settings as required
 import core.wifi as wifi
 from core.logging import log
 
