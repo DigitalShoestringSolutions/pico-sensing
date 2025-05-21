@@ -13,9 +13,10 @@ Public API: only the function 'publish'
 import json                             # For formatting dictionaries with double quotes
 
 # Installed imports
-from core.umqttsimple import MQTTClient
+#none
 
 # Local imports
+from core.umqttsimple import MQTTClient
 from core.timestamp import get_timestamp
 from core.logging import log
 from core.settings import * # default settings and user settings combined. 
