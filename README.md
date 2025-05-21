@@ -11,8 +11,6 @@ Minimal sensing system using the Raspberry Pi Pico
 
 - Edit `user_settings.py` to suit your application. Read more below or examples of what can be done there can be found in `example_user_settings`.
 
-- Using MQTT requires one external library to be installed. It is called `micropython-umqtt.simple` and can be installed with Thonny's `Manage packages...` tool
-
 
 # About
 
