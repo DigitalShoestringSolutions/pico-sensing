@@ -13,7 +13,7 @@ Public API: only the function 'publish'
 import json                             # For formatting dictionaries with double quotes
 
 # Installed imports
-from umqtt.simple import MQTTClient     # micropython-umqtt.simple (not v2)
+from core.umqttsimple import MQTTClient
 
 # Local imports
 from core.timestamp import get_timestamp
