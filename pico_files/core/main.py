@@ -7,6 +7,7 @@ Blinks the LED every cycle
 # standard imports
 import machine          # Onboard LED
 from time import sleep
+from os import uname
 
 # local imports
 from core.default_settings import *
@@ -16,6 +17,7 @@ from core.logging import log
 
 # startup
 log("starting up")
+log(os.uname())                     # Log and display firmware version, platform etc.
 if wifi_ssid is not None:           # Skip unless wifi_ssid has been overwritten in user_settings.py
     wifi.connect(wifi_ssid, wifi_password, wifi_error_count_limit) # blocking until sucessful. wifi_password must be defined in user_settings.py
 led = machine.Pin("LED", machine.Pin.OUT)
