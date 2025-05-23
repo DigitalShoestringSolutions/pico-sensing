@@ -1,5 +1,5 @@
-# This file is https://github.com/micropython/micropython-lib/blob/54d5f7cee2b95c976589bd4c815c24c358557e3f/micropython/umqtt.simple/umqtt/simple.py 
-# Version 1.6.0
+# This file is a copy of https://github.com/micropython/micropython-lib/blob/54d5f7cee2b95c976589bd4c815c24c358557e3f/micropython/umqtt.simple/umqtt/simple.py 
+# Version 1.6.0 according to manifest.py in the same commit
 # Licence: MIT micropython-lib contributors
 
 import socket
