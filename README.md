@@ -17,8 +17,9 @@ Minimal sensing system using the Raspberry Pi Pico
 # About
 
 ### `user_settings.py`
-Everything that needs to be done to configure this code is done in one file: `user_settings.py`.  
-This is combined with some default settings found in `core.settings.py` (overwriting where necessary) and the combined namespace is used by other components.
+Everything that needs to be done to configure this code is done in one file: `user_settings.py`. An underlying set of default settings can be found in `core.default_settings.py`.  
+Typically when a module loads the settings, it will first import * (all objects) from `core.default_settings`, then also import * from `user_settings`.  
+This allows for a merged namespace while keeping `user_settings` short.  
 
 ### Timing, `cycle()` and `cycle_interval`
 The only assumption imposed by using this repository is that the pico is to undertake a repetitive task at fixed intervals.  
@@ -41,7 +42,7 @@ The LED should never be continously on for longer than `cycle_interval`.
 A basic error handling system is implemented. Exceptions are contained to each cycle.   
 If an error occurs during `cycle()`, a 3 second pause is implemented before the LED is turned back on. This gives a visual indication that an error occured but was contained. An error counter is also incremented. This error counter is reset to 0 after a cycle runs without error.  
 
-If consecutive attempts to run `cycle()` result in errors, eventually the error counter will reach a limit after which the device will hard reboot. This is implemented to recover from certain situations where a reboot may help (e.g. lost WiFi connection). This limit can be changed by setting the variable `consecutive_error_count_limit` in `user_settings.py`. The default value is 10 (as seen in `core.settings.py`). A 5 second pause occurs before rebooting, both to indicate via the LED that this has happened and to allow time for the message to be read in the terminal.
+If consecutive attempts to run `cycle()` result in errors, eventually the error counter will reach a limit after which the device will hard reboot. This is implemented to recover from certain situations where a reboot may help (e.g. lost WiFi connection). This limit can be changed by setting the variable `consecutive_error_count_limit` in `user_settings.py`. The default value is 10 (as seen in `core.default_settings.py`). A 5 second pause occurs before rebooting, both to indicate via the LED that this has happened and to allow time for the message to be read in the terminal.
 A different limit can be defined for WiFi connection attempts, using the variable `wifi_error_count_limit` (default 20) in the same way.
 
 ### Log files

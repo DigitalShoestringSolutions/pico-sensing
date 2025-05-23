@@ -18,7 +18,8 @@ from umqtt.simple import MQTTClient     # micropython-umqtt.simple (not v2)
 # Local imports
 from core.timestamp import get_timestamp
 from core.logging import log
-from core.settings import * # default settings and user settings combined. 
+from core.default_settings import *
+from user_settings import *     # Overwrite default settings as required
 
 
 

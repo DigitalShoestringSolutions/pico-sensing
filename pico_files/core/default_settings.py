@@ -15,8 +15,3 @@ def cycle():
 # error handling
 consecutive_error_count_limit = 10
 wifi_error_count_limit = 20
-
-
-
-# Finally, import the user-facing settings file to overwrite selected objects above
-from user_settings import *
