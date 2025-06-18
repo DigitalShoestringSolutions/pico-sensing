@@ -12,7 +12,7 @@ Public API: only the function 'publish'
 # Standard imports
 import json                             # For formatting dictionaries with double quotes
 from machine import unique_id           # Hardware instance specific identifier, for MQTT
-from ubinascii import hexlify           # For rendering bytes onjects into strings
+from ubinascii import hexlify           # For rendering bytes objects into strings
 
 # Installed imports
 #none
