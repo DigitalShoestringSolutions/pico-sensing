@@ -11,6 +11,8 @@ Public API: only the function 'publish'
 
 # Standard imports
 import json                             # For formatting dictionaries with double quotes
+from machine import unique_id           # Hardware instance specific identifier, for MQTT
+from ubinascii import hexlify           # For rendering bytes objects into strings
 
 # Installed imports
 #none
@@ -62,7 +64,7 @@ def publish(msg, topic=mqtt_topic, broker=mqtt_broker, add_timestamp=True):
     log(payload)
 
     # publish to mqtt
-    client = MQTTClient("NotSoUniqueClientID", broker, keepalive=3600)
+    client = MQTTClient(hexlify(unique_id()).decode(), broker, keepalive=3600) # single use MQTT connection instance
     client.connect()
     client.publish(topic, payload)
     client.disconnect()
