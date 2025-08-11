@@ -1,0 +1,30 @@
+Plan for ADXL345 accelerometer on pico
+
+Single core for simplicity. Switch between burst sampling and processing / sending.
+
+cycle() will produce a py dict similar to the original esp code:
+
+Prepare sensor: write measure bit to wake from sleep, set bandwidth and range
+Read from I2C devaddr 0x53 6 bytes from memaddr 0x32 
+Read data into buffer as fast as possible (for a fixed number of samples, or until duration passed?)
+
+Pre-process: assemble bytes, convert to floats, scale into m/s2
+Post-process:
+  Remove average / DC offset (sensor could be in any orientation)
+  RMS / magnitude buffer (sum vs hypot)
+  FFT buffer
+  add peak frequency (highest bin) (as float)
+  add acceleration (total RMS? what calculation formula? RMS of all accu samples?)
+
+Submit over MQTT
+  add id (machine) and timestamp
+
+
+Take inspiration for reading sensor from:
+  https://github.com/alcalyn/adxl345/blob/master/adxl345/adxl345.py
+  https://github.com/pimoroni/adxl345-python/blob/master/adxl345.py
+  https://github.com/adafruit/Adafruit_Python_ADXL345/blob/master/Adafruit_ADXL345/ADXL345.py
+
+Possible FFT libraries:
+  https://github.com/peterhinch/micropython-fourier
+  https://github.com/v923z/micropython-ulab
