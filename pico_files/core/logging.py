@@ -5,7 +5,7 @@ Logging system for Micropython.
 Public API: the function log()
 
 No log levels. Include them in your message if you want to.
-Messages are cast to string, timestamped (second precision) and printed to serial and also written to file.
+Messages are cast to string, timestamped (microsecond resolution) and printed to serial and also written to file.
 Automatic file size limitation, rotation and deletion.
 
 sample usage:
@@ -16,9 +16,11 @@ log(mymsg)
 Inspired by http://www.d3noob.org/2024/03/logging-and-troubleshooting-on.html
 """
 
-# standard imports
+# Standard library imports
 import os
-from machine import RTC
+
+# Local imports
+from core.timestamp import get_timestamp
 
 # settings
 log_filename = "log.txt"
@@ -39,15 +41,14 @@ def _create_log_file():
 
 # Public function
 def log(loginfo:str, print_loginfo:bool=True):
-    """Append a message to the plaintext log file. A timestamp from rtc.datetime() is added.
+    """Append a message to the plaintext log file. A timestamp from core.timestamp (rtc.datetime() + time_ns()) is added.
     
     :param str loginfo:             The message to be appended to the log file.
     :param bool=True print_loginfo: (optional) If `True`, loginfo will be passed to print() to display in the serial terminal
     """
 
-    # Format the timestamp
-    timestamp=rtc.datetime()
-    timestring="%04d-%02d-%02d %02d:%02d:%02d"%(timestamp[0:3] + timestamp[4:7])
+    # Get the timestamp as soon as called
+    timestring = get_timestamp()
 
     # Check the file size
     filestats = os.stat(log_filename)
@@ -85,7 +86,6 @@ def log(loginfo:str, print_loginfo:bool=True):
 
 
 # Startup
-rtc = RTC()
 _create_log_file() # Although when writing the file would be created as needed, this is done first so the filesize can be checked without error.
 
 
