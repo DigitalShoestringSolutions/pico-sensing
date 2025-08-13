@@ -7,6 +7,7 @@ machine_name  = 'pico_adxl345'
 # Other imports
 from math import sqrt
 from core.mqtt import publish
+from models.fft import simpledft
 
 # Sensor and sampling definition
 from sensors.adxl345 import ADXL345
@@ -31,16 +32,13 @@ def cycle():
 
 
         # Perform DFT
-    fft = { # frequency: magnitude
-        1 : 3, # dummy
-        2 : 4,
-        3 : 1,
-        4 : 1,
-    }
+    fft = {}
+    for f, m in enumerate(simpledft(samples)):
+        fft[f*3.125] = m  # frequency: magnitude. Frequencies are scaled by sample rate / window size = 3200 / 1024 = 3.125
 
 
         # Identify peak frequency bin
-    peak_magnitude = 0
+    peak_magnitude = 0.2 # to avoid noise creating a high preakFrequency, offset this threshold from 0.
     peak_frequency = 0 # is it possible all magnitudes could be <= 0 ? Ensure pf is defined
     for frequency, magnitude in fft.items():
         if magnitude > peak_magnitude:
