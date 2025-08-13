@@ -26,7 +26,7 @@ from core.timestamp import get_timestamp
 log_filename = "log.txt"
 log_filename_old = "log_old.txt"
 log_file_size_limit = 200000 # Bytes before rotating. 200kB, so both log files toogether will take max 20% of Pico's 2MB flash memory.
-
+default_max_loginfo_size = 200 # Characters before log message is truncated
 
 def _create_log_file():
     """Check to see if primary log file is present and create if necessary."""    
@@ -40,11 +40,12 @@ def _create_log_file():
 
 
 # Public function
-def log(loginfo:str, print_loginfo:bool=True):
+def log(loginfo:str, print_loginfo:bool=True, max_loginfo_size=default_max_loginfo_size):
     """Append a message to the plaintext log file. A timestamp from core.timestamp (rtc.datetime() + time_ns()) is added.
     
-    :param str loginfo:             The message to be appended to the log file.
-    :param bool=True print_loginfo: (optional) If `True`, loginfo will be passed to print() to display in the serial terminal
+    :param str loginfo:              The message to be appended to the log file.
+    :param bool=True print_loginfo:  (optional) If `True`, loginfo will be passed to print() to display in the serial terminal
+    :param int=200 max_loginfo_size: (optional) The number of characters after which str(loginfo) will be truncated
     """
 
     # Get the timestamp as soon as called
@@ -54,6 +55,11 @@ def log(loginfo:str, print_loginfo:bool=True):
     filestats = os.stat(log_filename)
     filesize = filestats[6]           # File size in bytes
 
+    # Truncate loginfo if long
+    loginfo = str(loginfo) # if something other than a string is supplied, attempt to cast it.
+    if len(loginfo) > max_loginfo_size:
+        loginfo = loginfo[:max_loginfo_size] + "..."
+
     # Print to terminal if required
     if print_loginfo:
         print(loginfo)
@@ -62,7 +68,7 @@ def log(loginfo:str, print_loginfo:bool=True):
         try:
 
             # loginfo is recast to string. Add filesize (right aligned, padded to fit maximum)
-            logline = timestring +" "+ f"{str(filesize):>{len(str(log_file_size_limit))}}"  +" "+ str(loginfo) +"\n"
+            logline = timestring +" "+ f"{str(filesize):>{len(str(log_file_size_limit))}}"  +" "+ loginfo +"\n"
 
             # Write to file
             with open(log_filename, "at") as f:
