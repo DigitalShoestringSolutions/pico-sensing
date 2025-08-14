@@ -6,7 +6,7 @@ Blinks the LED every cycle
 
 # standard imports
 import machine          # Onboard LED
-from time import sleep
+import time
 from os import uname
 
 # local imports
@@ -27,6 +27,10 @@ log("starting main loop")
 consecutive_error_count = 0
 
 while True:
+    
+    last_cycle_start_time = time.ticks_us() # monotonic, add and diff below control overflow. Resample rather than offset previous. 
+    time.sleep_ms(50)                       # Minimum cycle time. Even if cycle() is fast, 50ms is easily long enough to see the LED blinking off.
+    led.off()
 
     try:
         cycle()                     # cycle() is imported from user_settings.py
@@ -39,13 +43,12 @@ while True:
         
         if consecutive_error_count >= consecutive_error_count_limit:
             log(f"Consecutive error count hitting limit of {consecutive_error_count_limit}, resetting MCU")
-            sleep(5)        # Allow time to see above message before rebooting
+            time.sleep(5)   # Allow time to see above message before rebooting
             machine.reset() # reboot
 
-        sleep(3) # slow blink to indicate issue
+        time.sleep(3) # slow blink (long off) to indicate issue
 
     # Normal blink pattern between cycles
-    led.on()
-    sleep(cycle_interval*0.95) # mostly on blink
-    led.off()
-    sleep(cycle_interval*0.05) # typically cycle function takes time so this is stretched. Even if not, 50ms still easily visible.
+    led.on() # mostly on blink
+    while time.ticks_diff(time.ticks_add(last_cycle_start_time, int(cycle_interval*1000000)), time.ticks_us()) > 0: 
+        pass # wait until loop has taken approximately long enough. 
