@@ -23,7 +23,7 @@ This allows for a merged namespace while keeping `user_settings` short.
 The only assumption imposed by using this repository is that the pico is to undertake a repetitive task at fixed intervals.  
 The repetitive action is placed within the `cycle()` function in `user_settings.py`.  
 Between each `cycle()`, the pico sleeps for `cycle_interval` seconds. This has a default value of 1 unless a different value is assigned in `user_settings.py`.  
-Executing `cycle()` may take time. The sleep between cycles is not shortened to compensate, as for most applications is it not an issue that time is stretched in this way and the simplicity prevails.
+Executing `cycle()` may take time. The sleep between cycles is shortened to compensate.
 
 ### WiFi & MQTT
 To connect to wifi, define the strings `wifi_ssid` and `wifi_password` in `user_settings.py`. If WiFi is not required in your application, remove or comment out these lines.
