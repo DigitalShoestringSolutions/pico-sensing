@@ -4,7 +4,7 @@
 
 # Standard library imports
 from machine import I2C, Pin
-from time import sleep, sleep_us, time_ns
+import time
 
 
 class ADXL345:
@@ -53,7 +53,7 @@ class ADXL345:
         for _ in range(nsamples):
             raw_samples.append(self.i2c.readfrom_mem(self.device_i2c_addr, 0x32, 6)) # read 6 bytes starting at mem 0x32
             # Unrestricted this loop runs in 285us i.e. 3.5 kHz. That's faster than the sensor can measure (3.2 kHz)!
-            sleep_us(24) # slow down to match sensor speed. Subtract 3 for sleep function overhead. 
+            time.sleep_us(24) # slow down to match sensor speed. Subtract 3 for sleep function overhead. 
             # Do we want to be sampling just over or just under the sensor's rate? No PLL, no great oversampling available.
     
         return raw_samples
@@ -99,20 +99,20 @@ class ADXL345:
     def speedtest(self, max_samples:int=4096): # memory allocation sometimes fails above 4096 samples
         """Test raw sampling rate"""
 
-        sampling_start_time_1 = time_ns()
+        sampling_start_time_1 = time.ticks_us()
         self.get_raw_samples(1)
-        sampling_end_time_1 = time_ns() # int, always multiple of 1000
-        sampling_time_1 = int((sampling_end_time_1 - sampling_start_time_1) / 1000) # result in us
+        sampling_end_time_1 = time.ticks_us()
+        sampling_time_1 = sampling_end_time_1 - sampling_start_time_1
         print(f"gathering 1 sample took {sampling_time_1} us")
 
-        sampling_start_time_2 = time_ns()
+        sampling_start_time_2 = time.ticks_us()
         self.get_raw_samples(max_samples)
-        sampling_end_time_2 = time_ns()
-        sampling_time_2 = int((sampling_end_time_2 - sampling_start_time_2) / 1000)
+        sampling_end_time_2 = time.ticks_us()
+        sampling_time_2 = sampling_end_time_2 - sampling_start_time_2
         print(f"gathering {max_samples} samples took {sampling_time_2} us")
 
         print(f"gathering an additional {max_samples - 1} samples took an additional {sampling_time_2 - sampling_time_1} us")
-        print(f"average time per additional sample was {(sampling_time_2 - sampling_time_1) / (max_samples - 1)} us") # typ 285 unrestricted
+        print(f"average time per additional sample was {(sampling_time_2 - sampling_time_1) / (max_samples - 1)} us")
 
 
 if __name__ == '__main__':
@@ -123,4 +123,4 @@ if __name__ == '__main__':
         for axis in myadxl.sample()[0]:
             print("{:6.2f}".format(axis), end=' ')
         print()
-        sleep(0.1)
+        time.sleep(0.1)
