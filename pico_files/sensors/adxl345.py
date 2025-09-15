@@ -50,17 +50,19 @@ class ADXL345:
         """
 
         raw_samples = []
+        next_sample_time = time.ticks_us()
         for _ in range(nsamples):
+            # Unrestricted this loop runs in 285us i.e. 3.5 kHz on RP2040 or 259us on RP2350. That's faster than the sensor can measure (3.2 kHz)!
+            while time.ticks_diff(next_sample_time, time.ticks_us()) > 0: # active correction is hardware agnostic, unlike blind sleep
+                pass
             raw_samples.append(self.i2c.readfrom_mem(self.device_i2c_addr, 0x32, 6)) # read 6 bytes starting at mem 0x32
-            # Unrestricted this loop runs in 285us i.e. 3.5 kHz. That's faster than the sensor can measure (3.2 kHz)!
-            time.sleep_us(24) # slow down to match sensor speed. Subtract 3 for sleep function overhead. 
-            # Do we want to be sampling just over or just under the sensor's rate? No PLL, no great oversampling available.
-    
+            next_sample_time = time.ticks_add(next_sample_time, 312) # Ideal sample spacing from 3200 Hz is 312.5 us, oversample slightly.    
+
         return raw_samples
     
 
     def sample(self, nsamples:int=1) -> list: # at risk of becoming the odd one out, other sensor.sample() methods return a dict
-        """Read a burst of samples from the accelerometer with minimum spacing (nom 800Hz)
+        """Read a burst of samples from the accelerometer with minimum spacing (nom 3200Hz)
         
         :param nsamples: number of samples to take
 
