@@ -150,13 +150,56 @@ class pico_adc(GenericADC):
         """
         return self._adc(channel).read_u16()
 
+
+class ads1115(GenericADC):
+    """ADS1115 16 bit I2C ADC https://www.ti.com/lit/ds/symlink/ads1115.pdf"""
+
+    def __init__(self, sda_pin_num, scl_pin_num, i2c_bus_num, i2c_addr=0x48, default_channel=None):
+        """Single-ended use with range 6.144V only, but output code will not exceed supply voltage.
+
+        :param int sda_pin_num: I2C Serial DAta pin number (GP numbering)
+        :param int scl_pin_num: I2C Serial CLock pin number (GP numbering)
+        :param int i2c_bus_num: I2C bus associated with these SDA and SCL pins. Must be 0 or 1.
+        :param int i2c_addr: Device I2C address set by ADDR pin. Must be in range 72-75.
+        :param int default_channel: (optional) The channel to sample from if not specified when calling `read_` functions.
+        """
+
+        from machine import Pin, I2C
+        self.i2c_addr = i2c_addr
+        super().__init__(6.144, 32767, default_channel) # always use max input range of 6.144V for simple compatibility, but set on hardware only at sample time.
+        self.i2c = I2C(i2c_bus_num, sda=Pin(sda_pin_num), scl=Pin(scl_pin_num))
+
+    def read_int_raw(self, channel=None):
+        """Override: Read from the external ADS115 I2C ADC as a 16bit integer using two's complement.
+        
+        :param int channel: (optional) The channel to read from. If not specified, `default_channel` will be used.
+        """
+
+        # resend config before every sample rather than at init time, in case of hotplugging or corruption
+        # prep config for single-ended conversion, FSR=6.144V, continous, 128SPS, comparator off. See datasheet p28.
+        config = [(0b01 << 6) | (channel << 4) | (0b000 << 1) | (0b0), ( (0b100 << 5) | (0b00011) )]
+        # write 2 config bytes to config word register at address 0x01
+        self.i2c.writeto_mem(self.i2c_addr, 0x01, bytearray(config))
+
+        # Wait while sample is taken. 1 cycle at 128SPS = 7.82ms, 15ms observed to not always be enough.
+        sleep(0.020)
+
+        # Read 2 bytes from register 0
+        adc_bytes = self.i2c.readfrom_mem(self.i2c_addr, 0x00, 2)
+        adc_int = (adc_bytes[0] << 8) | adc_bytes[1]
+        return adc_int
+
 # test
 if __name__ == '__main__':
     print("testing ADCs")
-    myadc = pico_adc()
-    channels = [26, 27, 28]
+    #myadc = pico_adc()
+    #channels = [26, 27, 28]
+    myadc = ads1115(26, 27, 1)
+    channels = [0, 1, 2, 3]
     while True:
         for channel in channels:
-            print(myadc.sample(channel), end=' ')
-            print()
+            print(myadc.sample(channel))
+            #print(myadc.read_voltage(channel))
+            #print(myadc.read_int_raw(channel))
+        print()
         sleep(1)

@@ -6,6 +6,7 @@ machine_name  = "pico_power_3pu"
 
 # Sensor and sampling definition
 from sensors.adcs import pico_adc as adc
+#from sensors.adcs import ads1115 as adc # To use a different ADC, adapt the import like so
 from models.current_transformer import CT
 from core.mqtt import publish
 
