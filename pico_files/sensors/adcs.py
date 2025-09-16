@@ -6,7 +6,7 @@ Support for negative readings is implemented, but only one channel number can be
 
 
 from time import sleep
-
+from machine import ADC, Pin, I2C
 
 class GenericADC:
 
@@ -140,15 +140,13 @@ class pico_adc(GenericADC):
         :param int default_channel: (optional) The channel to sample from if not specified when calling `read_` functions.
         """
         super().__init__(3.3, 65535, default_channel)
-        import machine
-        self._adc = machine.ADC # save pointer to class constructor
 
     def read_int_raw(self, channel=None):
         """Override: read from the Pico's ADC as an unsigned 16bit integer.
         
         :param int channel: (optional) The channel to read from. If not specified, `default_channel` will be used.
         """
-        return self._adc(channel).read_u16()
+        return ADC(channel).read_u16()
 
 
 class ads1115(GenericADC):
@@ -164,7 +162,6 @@ class ads1115(GenericADC):
         :param int default_channel: (optional) The channel to sample from if not specified when calling `read_` functions.
         """
 
-        from machine import Pin, I2C
         self.i2c_addr = i2c_addr
         super().__init__(6.144, 32767, default_channel) # always use max input range of 6.144V for simple compatibility, but set on hardware only at sample time.
         self.i2c = I2C(i2c_bus_num, sda=Pin(sda_pin_num), scl=Pin(scl_pin_num))
@@ -192,10 +189,8 @@ class ads1115(GenericADC):
 # test
 if __name__ == '__main__':
     print("testing ADCs")
-    #myadc = pico_adc()
-    #channels = [26, 27, 28]
-    myadc = ads1115(26, 27, 1)
-    channels = [0, 1, 2, 3]
+    myadc, channels = pico_adc(), [26, 27, 28]
+    #myadc, channels = ads1115(26, 27, 1), [0, 1, 2, 3]
     while True:
         for channel in channels:
             print(myadc.sample(channel))
