@@ -25,7 +25,7 @@ from core.timestamp import get_timestamp
 # settings
 log_filename = "log.txt"
 log_filename_old = "log_old.txt"
-log_file_size_limit = 200000 # Bytes before rotating. 200kB, so both log files toogether will take max 20% of Pico's 2MB flash memory.
+log_file_size_limit = 10000 # Bytes before rotating. 10kB, so both log files toogether will take max 1% of Pico's 2MB flash memory.
 default_max_loginfo_size = 200 # Characters before log message is truncated
 
 def _create_log_file():
