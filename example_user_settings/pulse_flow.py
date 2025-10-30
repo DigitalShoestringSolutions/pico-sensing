@@ -15,4 +15,4 @@ from core.mqtt import publish
 # Define regularly scheduled activity
 cycle_interval = 3  # cycle() will run every n seconds. Defaults to 1 if this line is omitted.
 def cycle():
-    publish(flow_sensor_1.sample())
+    publish(flow_sensor_1.sample(), topic = "flow/" + flow_sensor_1.data_tags["machine"])  # Get topic name from sensor instance
