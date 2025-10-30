@@ -15,7 +15,7 @@ class PulseCounter:
         """Counts pulses on a button input.
         
         :param int pin_num:      Pin number to detect edges on. On Raspberry Pi Pico, this is the GP numbering scheme.
-        :param float multiplier: Scale readings by this factor before returning them
+        :param float multiplier: Scale all readings by this factor before returning them
         """
         # Setup input and callback
         self._input_pin = Pin(pin_num, mode=Pin.IN, pull=Pin.PULL_UP)
@@ -32,7 +32,8 @@ class PulseCounter:
 
     def _on_pulse(self, pin):
         """Callback handler. Minimal activity here for fast callback.
-        pin argument is not used, but is required to be handled
+        
+        :param pin: Piun argument is not used, but is required to be handled for IRQ
         """
         self._count += 1
 
@@ -59,9 +60,9 @@ class PulseCounter:
 
         # Scale the output values if multiplier used
         if self.multiplier != 1:
-            delta_count *= self.multiplier  # If self.multipler == 1, don't multiply by 1 so it can stay an int
+            delta_count *= self.multiplier  # If self.multipler == 1, don't multiply by 1 so count can stay an int
             density *= self.multiplier
-        density *= timescale
+        density *= timescale                # density is already a float so no need to protect it in the same way.
 
         # Return values
         return delta_count, density
@@ -69,19 +70,25 @@ class PulseCounter:
 
 class FlowSensor(PulseCounter):
 
-    def __init__(self, pin_num: int, pulses_per_litre: float):
+    def __init__(self, pin_num: int, pulses_per_litre: float, data_tags: dict = None):
         """Child of PulseCounter specalised for switch-output flow sensors.
 
+        Returns a dictionary with keys `flow` and `flow_rate`. 
         Uses units of litres and litres/hour, as that is what Grafana is currently interpreting the readings as.
         
         :param int pin_num:            Pin number to detect edges on. On Raspberry Pi Pico, this is the GP numbering scheme.
         :param float pulses_per_litre: Number of pulses the sensor emits for every litre of fluid that passes through it.
+        :param dict data_tags:         (optional) Additional dictionary to merge with the data before returning.
         """
         super().__init__(pin_num, multiplier=1/pulses_per_litre)
+        self.data_tags = data_tags
 
     def sample(self):
         volume, rate = self.recent_pulses_and_density(timescale=3600) # seconds -> hours
-        return{
+        data = {
             "flow": volume,     # litres
             "flow_rate": rate,  # litres per hour
             }
+        if self.data_tags is not None:
+            data = data | self.data_tags  # Merge with 
+        return data
