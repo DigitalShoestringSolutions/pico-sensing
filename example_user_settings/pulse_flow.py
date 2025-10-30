@@ -5,7 +5,7 @@ mqtt_broker   = '***'
 
 # Configure sensors
 from sensors.pulse_counters import FlowSensor
-flow_sensor_1 = FlowSensor(pin_num=26,            # A flow sensor connected to pin 26 (GP numbering)
+flow_sensor_1 = FlowSensor(pin_num=28,            # A flow sensor connected to pin 28 (GP numbering)
                            pulses_per_litre=7.5,  # that outputs 7.5 pulses per litre passed.
                            data_tags={"machine":"MyMachineName1", "source":"MySourceName1"})  # Name the sensor and the water source
 
