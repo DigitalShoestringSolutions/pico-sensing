@@ -1,0 +1,94 @@
+# pulse_counters.py 
+
+# Standard imports
+import time
+
+# Installed imports
+from machine import Pin
+
+# Local imports
+#none
+
+class PulseCounter:
+
+    def __init__(self, pin_num: int, multiplier: float = 1):
+        """Counts pulses on a button input.
+        
+        :param int pin_num:      Pin number to detect edges on. On Raspberry Pi Pico, this is the GP numbering scheme.
+        :param float multiplier: Scale all readings by this factor before returning them
+        """
+        # Setup input and callback
+        self._input_pin = Pin(pin_num, mode=Pin.IN, pull=Pin.PULL_UP)
+        self._input_pin.irq(self._on_pulse, Pin.IRQ_FALLING)
+
+        # Save other args
+        self.multiplier = multiplier
+
+        # Init new variables
+        self._count = 0
+        self._old_count = 0
+        self._old_time = time.ticks_us()
+
+
+    def _on_pulse(self, pin):
+        """Callback handler. Minimal activity here for fast callback.
+        
+        :param pin: Piun argument is not used, but is required to be handled for IRQ
+        """
+        self._count += 1
+
+
+    def recent_pulses_and_density(self, timescale: float = 1) -> tuple:
+        """Returns the number of pulses since this function was last called.
+
+        Also returns the same divided by the time since this function was last called, multipled by timescale.
+
+        :param float timescale: (optional) Further scale the density measurement by this value, in addition to the usual scaling by `multipler` set when constructing
+        """
+        # Read count and timestamp. Copy once so pulses while this function is executing are not lost.
+        new_count = self._count
+        new_time = time.ticks_ms()  # microseconds is tempting for more precision, but then overflow errors are possible if the cycle_interval approaches 500s (TICK_MAX on RP2 is 1073741823)
+
+        # Calculate detla
+        delta_count = new_count - self._old_count
+        delta_time = time.ticks_diff(new_time, self._old_time) / 1000  # Handle overflow, convert milliseconds to seconds
+        density = delta_count / delta_time
+        
+        # Save data for next time
+        self._old_count = new_count
+        self._old_time = new_time
+
+        # Scale the output values if multiplier used
+        if self.multiplier != 1:
+            delta_count *= self.multiplier  # If self.multipler == 1, don't multiply by 1 so count can stay an int
+            density *= self.multiplier
+        density *= timescale                # density is already a float so no need to protect it in the same way.
+
+        # Return values
+        return delta_count, density
+
+
+class FlowSensor(PulseCounter):
+
+    def __init__(self, pin_num: int, pulses_per_litre: float, data_tags: dict = {}):
+        """Child of PulseCounter specalised for switch-output flow sensors.
+
+        Returns a dictionary with keys `flow` and `flow_rate`. 
+        Uses units of litres and litres/hour, as that is what Grafana is currently interpreting the readings as.
+        
+        :param int pin_num:            Pin number to detect edges on. On Raspberry Pi Pico, this is the GP numbering scheme.
+        :param float pulses_per_litre: Number of pulses the sensor emits for every litre of fluid that passes through it.
+        :param dict data_tags:         (optional) Additional dictionary to merge with the data before returning.
+        """
+        super().__init__(pin_num, multiplier=1/pulses_per_litre)
+        self.data_tags = data_tags
+
+    def sample(self):
+        volume, rate = self.recent_pulses_and_density(timescale=3600) # seconds -> hours
+        data = {
+            "flow": volume,     # litres
+            "flow_rate": rate,  # litres per hour
+            }
+
+        data = data | self.data_tags  # Merge data with any tags set by user
+        return data
