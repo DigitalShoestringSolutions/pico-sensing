@@ -152,14 +152,14 @@ class pico_adc(GenericADC):
 class ads1115(GenericADC):
     """ADS1115 16 bit I2C ADC https://www.ti.com/lit/ds/symlink/ads1115.pdf"""
 
-    def __init__(self, sda_pin_num, scl_pin_num, i2c_bus_num, i2c_addr=0x48, default_channel=None):
+    def __init__(self, default_channel=None, sda_pin_num=4, scl_pin_num=5, i2c_bus_num=0, i2c_addr=0x48):
         """Single-ended use with range 6.144V only, but output code will not exceed supply voltage.
 
-        :param int sda_pin_num: I2C Serial DAta pin number (GP numbering)
-        :param int scl_pin_num: I2C Serial CLock pin number (GP numbering)
-        :param int i2c_bus_num: I2C bus associated with these SDA and SCL pins. Must be 0 or 1.
-        :param int i2c_addr: Device I2C address set by ADDR pin. Must be in range 72-75.
         :param int default_channel: (optional) The channel to sample from if not specified when calling `read_` functions.
+        :param int sda_pin_num:     (optional) I2C Serial DAta pin number (GP numbering). Default 4.
+        :param int scl_pin_num:     (optional) I2C Serial CLock pin number (GP numbering). Default 5.
+        :param int i2c_bus_num:     (optional) I2C bus associated with these SDA and SCL pins. Must be 0 or 1. Default 0.
+        :param int i2c_addr:        (optional) Device I2C address set by ADDR pin. Must be in range 72-75. Default 72.
         """
 
         self.i2c_addr = i2c_addr
@@ -190,7 +190,7 @@ class ads1115(GenericADC):
 if __name__ == '__main__':
     print("testing ADCs")
     myadc, channels = pico_adc(), [26, 27, 28]
-    #myadc, channels = ads1115(26, 27, 1), [0, 1, 2, 3]
+    #myadc, channels = ads1115(), [0, 1, 2, 3]
     while True:
         for channel in channels:
             print(myadc.sample(channel))
