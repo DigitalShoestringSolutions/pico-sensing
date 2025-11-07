@@ -141,10 +141,10 @@ class pico_adc(GenericADC):
         """
         super().__init__(3.3, 65535, default_channel)
 
-    def read_int_raw(self, channel=None):
+    def read_int_raw(self, channel):
         """Override: read from the Pico's ADC as an unsigned 16bit integer.
         
-        :param int channel: (optional) The channel to read from. If not specified, `default_channel` will be used.
+        :param int channel: The channel to read from.
         """
         return ADC(channel).read_u16()
 
@@ -166,10 +166,10 @@ class ads1115(GenericADC):
         super().__init__(6.144, 32767, default_channel) # always use max input range of 6.144V for simple compatibility, but set on hardware only at sample time.
         self.i2c = I2C(i2c_bus_num, sda=Pin(sda_pin_num), scl=Pin(scl_pin_num))
 
-    def read_int_raw(self, channel=None):
+    def read_int_raw(self, channel):
         """Override: Read from the external ADS115 I2C ADC as a 16bit integer using two's complement.
         
-        :param int channel: (optional) The channel to read from. If not specified, `default_channel` will be used.
+        :param int channel: The channel to read from.
         """
 
         # resend config before every sample rather than at init time, in case of hotplugging or corruption
