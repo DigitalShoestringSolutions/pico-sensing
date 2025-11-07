@@ -47,11 +47,11 @@ class PulseCounter:
         """
         # Read count and timestamp. Copy once so pulses while this function is executing are not lost.
         new_count = self._count
-        new_time = time.ticks_us()
+        new_time = time.ticks_ms()  # microseconds is tempting for more precision, but then overflow errors are possible if the cycle_interval approaches 500s (TICK_MAX on RP2 is 1073741823)
 
         # Calculate detla
         delta_count = new_count - self._old_count
-        delta_time = time.ticks_diff(new_time, self._old_time) / 1000000  # Handle overflow, convert microseconds to seconds
+        delta_time = time.ticks_diff(new_time, self._old_time) / 1000  # Handle overflow, convert milliseconds to seconds
         density = delta_count / delta_time
         
         # Save data for next time
@@ -70,7 +70,7 @@ class PulseCounter:
 
 class FlowSensor(PulseCounter):
 
-    def __init__(self, pin_num: int, pulses_per_litre: float, data_tags: dict = None):
+    def __init__(self, pin_num: int, pulses_per_litre: float, data_tags: dict = {}):
         """Child of PulseCounter specalised for switch-output flow sensors.
 
         Returns a dictionary with keys `flow` and `flow_rate`. 
@@ -89,6 +89,6 @@ class FlowSensor(PulseCounter):
             "flow": volume,     # litres
             "flow_rate": rate,  # litres per hour
             }
-        if self.data_tags is not None:
-            data = data | self.data_tags  # Merge with 
+
+        data = data | self.data_tags  # Merge data with any tags set by user
         return data
