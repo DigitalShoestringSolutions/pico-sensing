@@ -104,13 +104,13 @@ class ADXL345:
         sampling_start_time_1 = time.ticks_us()
         self.get_raw_samples(1)
         sampling_end_time_1 = time.ticks_us()
-        sampling_interval_1 = time.ticks_diff(sampling_end_time_1 - sampling_start_time_1)
+        sampling_interval_1 = time.ticks_diff(sampling_end_time_1, sampling_start_time_1)
         print(f"gathering 1 sample took {sampling_interval_1} us")
 
         sampling_start_time_2 = time.ticks_us()
         self.get_raw_samples(max_samples)
         sampling_end_time_2 = time.ticks_us()
-        sampling_interval_2 = time.ticks_diff(sampling_end_time_2 - sampling_start_time_2)
+        sampling_interval_2 = time.ticks_diff(sampling_end_time_2, sampling_start_time_2)
         print(f"gathering {max_samples} samples took {sampling_interval_2} us")
 
         print(f"gathering an additional {max_samples - 1} samples took an additional {sampling_interval_2 - sampling_interval_1} us")
