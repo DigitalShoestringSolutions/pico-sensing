@@ -87,27 +87,74 @@ def _read_headers(filename) -> list:
     return headers
 
 
-def _rewrite_headers(new_headers, filename:str="data.csv") -> None:
-    """Add more columns to an existing CSV file."""
+def _rewrite_headers(new_headers: list, filename: str = "data.csv", buff_size: int = 3) -> None:
+    """Add more columns to an existing CSV file. Assumes that new_headers starts exactly as the old headers did."""
     # filename etc could be passed to this as a class. But I'd rather the usage simplicity of not having to init, as there is only one external function
     print(f"writing replacemnet headers {new_headers}")
-    with open(filename, "r+") as f:
-        f.seek(0) # goto begining of file
-        f.write(','.join(new_headers) + '\n')
-        # Problem here. This overwrites the first few bytes of the file. It does not stop at \n.
-        # Hence the first line (or more) of old data gets mangled, sometimes ending up in the headers!
-        # So, a new goal: find a memory efficient way of replacing the headers.
+
+    # Problem here. 'Inserting' new headers at the start of the file overwrites the first few bytes of the file. It does not stop overwriting at the first \n encountered.
+    # The new headers will be longer than the old, hence the first line (or more) of old data gets mangled, partially lost.
+    # So, a new goal: find a memory efficient way of replacing the headers with no data loss that remains a valid CSV.
+
         # Option 0: Pad the headers line to take plenty of bytes, so it can be rewritten at constant length? ugly.
-        # Option 1: read the whole file into memory, navigate to start of file, write new headers, write all data? limits file size to RAM, risky data loss
+        # Option 1: read the whole file into memory, navigate to start of file, write new headers, write all data? limits file size to RAM, risky data loss if process interrupted
         # Option 2: Write new headers to alternative file, iterate over old file and new copying data, add new data, delete original file, rename alt to primary? Low ram requirement but limits file size to half storage
         # Option 3: Working on a single file, read a couple of lines into a buffer and FIFO across the file moving everything along chunk by chunk? Resource efficient but hard to f.seak() 
 
+    # Attempt Option 3 (the best but hardest):
+    with open(filename, "r") as readfile:
+        with open(filename, "r+") as writefile:  # open the same file twice in separate instances with separate seek points
+
+            # pre-load line buffer
+            line_buffer = []
+            readfile.seek(0)
+            old_headers = readfile.readline() # discard old headers
+            for _ in range(buff_size):  # read enough lines of data to certainly cover what might get overwritten by new headers
+                line_buffer.append(readfile.readline())  # if eof is hit before buff_size, empty strings will be appended to the list. This is ok.
+            print(f"preloaded line_buffer with {line_buffer}")  # list of strings including \n at end of each
+
+            # Write new headers
+            writefile.seek(0)  # maintains a separate seek pointer to readfile, despite being the same file.
+            writefile.write(','.join(new_headers) + '\n')
+
+            # Copy data across
+            while len(line_buffer) > 0:
+                readline = readfile.readline()
+                if readline != '':  # if not at eof
+                    line_buffer.append(readline)
+
+                writefile.write(line_buffer.pop(0))
+
+    print("header rewrite complete")
 
 
 
 # test
-#save({'var1':1,'var2':2})
-#save({'var1':3,'var2':4})
-save({'var3':5})
-print()
-save({'var3':5,'var4':6})
+if __name__ == '__main__':
+    save({'varA': "a0"})             # mvp
+    save({'varA':"a1",'varB':"b1"})  # new header, rewrite
+    save({'varA':"a2"})              # missing last header
+    save({'varB':"b3"})              # missing early header
+    save({'varA':"a4",'varB':"b4"})  # back to normal
+    # So far file is 6 lines:
+    """varA,varB
+    a0
+    a1,b1
+    a2,
+    ,b3
+    a4,b4
+    """
+    # Now let's make it harder
+    save({'varC':"c5", 'varD':"d5"}) # two new headers at once, nothing in common with old
+    save({'varA':"a6", 'varD':"d6"}) # missing middle headers
+    # Final file is:
+    """varA,varB,varD,varC
+    a0
+    a1,b1
+    a2,
+    ,b3
+    a4,b4
+    ,,d5,c5
+    a6,,d6,
+    """
+    # perfect.
