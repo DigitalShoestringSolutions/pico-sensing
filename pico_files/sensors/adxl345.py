@@ -11,17 +11,17 @@ class ADXL345:
 
     g = 9.80665 # standard gravity
     gain = g/256 # multiply readings (in full res mode) by this to get m/s2.
-    
+
     def __init__(self, device_i2c_addr=0x53, i2cbus_num=0, sda_pin_num=8,scl_pin_num=9):
-        
+
         self.device_i2c_addr = device_i2c_addr
         self.i2c = I2C(i2cbus_num, sda=Pin(sda_pin_num), scl=Pin(scl_pin_num), freq=400000) # max 400 kHz datasheet page 17.
-        
+
         self.prepare_sensor()
 
 
     def prepare_sensor(self):
-        
+
         # Write measure bit to ensure sensor is not sleeping
         self.i2c.writeto_mem(self.device_i2c_addr, 0x2D, bytearray([0x08]))
         #print("power control set to", self.i2c.readfrom_mem(self.device_i2c_addr, 0x2D, 1)[0])
@@ -34,12 +34,12 @@ class ADXL345:
         self.i2c.writeto_mem(self.device_i2c_addr, 0x2C, bytearray([0x0F])) # 3200 Hz
         #self.i2c.writeto_mem(self.device_i2c_addr, 0x2C, bytearray([0x0D])) # 800 Hz
         #print("Output data rate set to", self.i2c.readfrom_mem(self.device_i2c_addr, 0x2C, 1)[0])
-        
+
         # Write data format. Full res, right justified and 16g range (no motive to go smaller? No ENOB improvements)
         self.i2c.writeto_mem(self.device_i2c_addr, 0x31, bytearray([0x0B]))
         #print("data format set to", self.i2c.readfrom_mem(self.device_i2c_addr, 0x31, 1)[0])
 
-        
+
     def get_raw_samples(self, nsamples:int=1) -> list:
         """Gather raw data from the accelerometer as fast as the sensor can produce it.
         Broken out into a separate function from sample() to ease measurement of read rate performance
@@ -59,16 +59,16 @@ class ADXL345:
             next_sample_time = time.ticks_add(next_sample_time, 312) # Ideal sample spacing from 3200 Hz is 312.5 us, oversample slightly.    
 
         return raw_samples
-    
+
 
     def sample(self, nsamples:int=1) -> list: # at risk of becoming the odd one out, other sensor.sample() methods return a dict
         """Read a burst of samples from the accelerometer with minimum spacing (nom 3200Hz)
-        
+
         :param nsamples: number of samples to take
 
         Returns: a list of (x,y,z) tuples
         """
-        
+
         self.prepare_sensor() # re-setup every time
 
         raw_samples = self.get_raw_samples(nsamples)
