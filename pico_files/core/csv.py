@@ -1,7 +1,7 @@
 # Save data to a local csv file
 
 import os # for checking file size
-#from core.timestamp import get_timestamp # ISO8601 timestrings
+from core.timestamp import get_timestamp # ISO8601 timestrings
 
 def save(data:dict, filename: str = "data.csv", add_timestamp=True, max_size: int = 1000000):
     """Receives a dictionary and writes this data to CSV.
@@ -14,20 +14,20 @@ def save(data:dict, filename: str = "data.csv", add_timestamp=True, max_size: in
     :param in max_size:        (optional) Max file size in bytes. After this no new data will be written. Default is is 1MB to fit within Pico's total 2MB budget.
     
     """
+    # Get timestamp asap
+    if get_timestamp:
+        timestamp = get_timestamp()
+
     # iff testing, display
     if __name__ == '__main__':
         print(f"saving data {data}")
-    
-    # Get timestamp asap, even if not used
-    #timestamp = get_timestamp()
-
 
     filesize = _filesize(filename)
     if filesize < max_size:
         
         # Add timestamp
-        #if add_timestamp:
-        #    data = data | {"timestamp" : timestamp}
+        if add_timestamp:
+            data =  {"timestamp" : timestamp} | data  # common keys in the latter dictionary take precedence
 
         # Read existing CSV headers
         headers = _read_headers(filename)
