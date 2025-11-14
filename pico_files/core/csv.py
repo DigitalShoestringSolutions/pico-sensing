@@ -3,7 +3,7 @@
 import os # for checking file size
 #from core.timestamp import get_timestamp # ISO8601 timestrings
 
-def save(data:dict, filename:str="data.csv", add_timestamp=True, max_size:int=1000000):
+def save(data:dict, filename: str = "data.csv", add_timestamp=True, max_size: int = 1000000):
     """Receives a dictionary and writes this data to CSV.
 
     Beware dictionaries are not ordered in micropython, so CSV columns may not be in the order expected.
@@ -14,7 +14,9 @@ def save(data:dict, filename:str="data.csv", add_timestamp=True, max_size:int=10
     :param in max_size:        (optional) Max file size in bytes. After this no new data will be written. Default is is 1MB to fit within Pico's total 2MB budget.
     
     """
-    print(f"saving data {data}")
+    # iff testing, display
+    if __name__ == '__main__':
+        print(f"saving data {data}")
     
     # Get timestamp asap, even if not used
     #timestamp = get_timestamp()
@@ -34,8 +36,6 @@ def save(data:dict, filename:str="data.csv", add_timestamp=True, max_size:int=10
         data_line = []
         for h in headers:
             if h in data: # str as read from file
-                #print(f"adding data {data[h]} to existing header {h}")
-                print(f"{data[h]} -> {h}")
                 data_line.append(str(data[h]))
             else:
                 data_line.append('') # add empty string to list for commas to fill early cols that no longer have data
@@ -43,9 +43,8 @@ def save(data:dict, filename:str="data.csv", add_timestamp=True, max_size:int=10
         # Add data to new columns
         header_rewrite_needed = False
         for k,v in data.items():      # iterates through data, unlike previous para which went through headers
-            if str(k) not in headers: # if it is in headers, will have been dealt with in previous paragraph
+            if str(k) not in headers: # if it is in headers, it will have been dealt with in previous paragraph
                 header_rewrite_needed = True
-                print(f"appending new col {k} with data {v}")
                 headers.append(str(k))
                 data_line.append(str(v))
 
@@ -53,9 +52,7 @@ def save(data:dict, filename:str="data.csv", add_timestamp=True, max_size:int=10
         if header_rewrite_needed:
             _rewrite_headers(headers, filename)
 
-
         # append data
-        print(f"writing data line {data_line}")
         with open(filename, "at") as f:
             f.write(','.join(data_line) + '\n') # leave a trailing newline at EoF
 
@@ -63,34 +60,29 @@ def save(data:dict, filename:str="data.csv", add_timestamp=True, max_size:int=10
         print(f"ERROR: data not saved to CSV due to filesize at limit {filesize}") # don't bother with proper logging on an MCU. Especially when the message is no room to log!
 
 
-def _filesize(filename) -> int:
+def _filesize(filename: str) -> int:
     """Get the size of a file in bytes"""
-    #Open file and close it again to ensure it exists. There are probably a few more efficient ways to do this.
+    # Open file and close it again to ensure it exists. There are probably a few more efficient ways to do this.
     with open(filename, 'at') as f: # append mode
         pass
     filesize = os.stat(filename)[6]           # File size in bytes
-    #print(f"filesize is {filesize}")
     return filesize
 
 
-def _read_headers(filename) -> list:
+def _read_headers(filename: str) -> list:
     """Read the first line of a CSV file"""
     with open(filename, 'r') as f:
         headerline = f.readline().strip('\n\r')
-    #print(f"headerline read as {headerline}")
     headers = headerline.split(',') # ordered list
     if '' in headers: # trailing comma or empty file means empty string makes it into the list
         headers.remove('')
         pass
-    #print(f"headers are {headers} length {len(headers)}")
-    print(f"headers {headers}")
     return headers
 
 
 def _rewrite_headers(new_headers: list, filename: str = "data.csv", buff_size: int = 3) -> None:
     """Add more columns to an existing CSV file. Assumes that new_headers starts exactly as the old headers did."""
     # filename etc could be passed to this as a class. But I'd rather the usage simplicity of not having to init, as there is only one external function
-    print(f"writing replacemnet headers {new_headers}")
 
     # Problem here. 'Inserting' new headers at the start of the file overwrites the first few bytes of the file. It does not stop overwriting at the first \n encountered.
     # The new headers will be longer than the old, hence the first line (or more) of old data gets mangled, partially lost.
@@ -111,7 +103,6 @@ def _rewrite_headers(new_headers: list, filename: str = "data.csv", buff_size: i
             old_headers = readfile.readline() # discard old headers
             for _ in range(buff_size):  # read enough lines of data to certainly cover what might get overwritten by new headers
                 line_buffer.append(readfile.readline())  # if eof is hit before buff_size, empty strings will be appended to the list. This is ok.
-            print(f"preloaded line_buffer with {line_buffer}")  # list of strings including \n at end of each
 
             # Write new headers
             writefile.seek(0)  # maintains a separate seek pointer to readfile, despite being the same file.
@@ -124,9 +115,6 @@ def _rewrite_headers(new_headers: list, filename: str = "data.csv", buff_size: i
                     line_buffer.append(readline)
 
                 writefile.write(line_buffer.pop(0))
-
-    print("header rewrite complete")
-
 
 
 # test
