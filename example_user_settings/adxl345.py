@@ -40,7 +40,7 @@ def cycle():
         magnitudes_downsampled.append(sum(magnitudes[j:j+7])) # sum samples j to j+6 inclusive, last entry in slice is excluded
 
         # Identify peak frequency bin
-    peak_magnitude = 0.2 # offset this threshold from 0 to avoid low-amplitude noise creating a high preakFrequency.
+    peak_magnitude = 0.2 # offset this threshold from 0 to avoid low-amplitude noise creating a high peak_frequency.
     peak_frequency = 0 # is it possible all magnitudes could be <= 0 ? Ensure pf is defined ahead of comparison below.
     for fbin, magnitude in enumerate(magnitudes): # note this is on raw FFT result, so another group of fbins might have a higher total. May be confusing in dashboard.
         if magnitude > peak_magnitude:
